@@ -14,6 +14,12 @@ type Response struct {
 }
 
 func main() {
+	// Check if a CLI parameter for the profile name is provided
+	var nProfileName = ""
+	if len(os.Args) > 1 {
+		nProfileName = os.Args[1]
+	}
+	fmt.Printf("CLI Profile %s\n", nProfileName)
 
 	meesticPath := "/run/meestic.sock"
 	meesticConn, err := net.Dial("unix", meesticPath)
@@ -43,7 +49,24 @@ func main() {
 	activeIndex := parsedResponse.Active
 	fmt.Printf("Active index: %d\n", activeIndex)
 
-	idx := (activeIndex + 1) % profileLen // Replace with your desired index value
+	var idx int
+	if nProfileName == "" {
+		idx = (activeIndex + 1) % profileLen
+	} else {
+		found := false
+		for i, name := range parsedResponse.Profiles {
+
+			if name == nProfileName {
+				idx = i
+				found = true
+				break
+			}
+		}
+		if !found {
+			idx = (activeIndex + 1) % profileLen
+		}
+	}
+
 	message := fmt.Sprintf("{\"apply\": %d}\n", idx)
 
 	// Process the received response
